@@ -1,0 +1,27 @@
+Compile ULFM:
+../configure --enable-mpi-ext=ftmpi --with-ft=mpi --disable-io-romio --enable-contrib-no-build=vt --prefix=/scratch/kdichev/
+Run test:
+mpirun --prefix /scratch/kdichev -am ft-enable-mpi  ./bcast
+
+HPX needs modifications to keep running:
+
+-- a/src/runtime/parcelset/parcelhandler.cpp
++++ b/src/runtime/parcelset/parcelhandler.cpp
+@@ -712,6 +712,10 @@ namespace hpx { namespace parcelset
+                     return;
+                 }
+             }
++            else {
++                if (ec == boost::asio::error::connection_reset)
++                    return;
++            }
+ 
+--- a/hpx/lcos/packaged_action.hpp
++++ b/hpx/lcos/packaged_action.hpp
+@@ -76,6 +78,8 @@ namespace lcos {
+             // any error in the parcel layer will be stored in the future object
+             if (ec)
+             {
++                   if (ec == boost::asio::error::connection_reset)
++                           return;
+
